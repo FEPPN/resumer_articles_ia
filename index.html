@@ -1,4 +1,4 @@
-<!-- 🔹 Papernest – Résumé IA compact avec bouton de copie -->
+<!-- 🔹 Papernest – Résumé IA compact avec encart de prompt -->
 <div class="ppn-ai-strip" role="region" aria-label="Résumé d'article via IA">
   <p class="ppn-ai-strip__title">
     <strong>Article trop long&nbsp;?</strong> Demandez un résumé à l’IA&nbsp;:
@@ -19,12 +19,18 @@
     </a>
   </div>
 
-  <!-- Petit bouton rond de copie -->
   <button id="ppnCopyPrompt" class="ppn-copy-icon" title="Copier le prompt">
-    📋
+    📋 Copier le prompt
   </button>
 
   <span class="ppn-ai-toast" aria-live="polite" hidden>✅ Prompt copié</span>
+
+  <!-- 🔸 Encart de fallback élégant -->
+  <div id="ppnPromptBox" class="ppn-prompt-box" hidden>
+    <p><strong>Copie manuelle :</strong> Voici votre prompt généré 👇</p>
+    <textarea id="ppnPromptText" readonly rows="9"></textarea>
+    <button id="ppnManualCopy" type="button">📋 Copier manuellement</button>
+  </div>
 </div>
 
 <style>
@@ -83,9 +89,10 @@
   background:#fff;
   border:1px solid rgba(11,15,25,.1);
   border-radius:999px;
-  font-size:1.2rem;
+  font-size:.95rem;
+  font-weight:600;
   cursor:pointer;
-  padding:8px 10px;
+  padding:8px 16px;
   color:var(--ppn-primary);
   transition:all .15s ease;
   box-shadow:0 3px 8px rgba(11,15,25,.05);
@@ -105,9 +112,46 @@
   color:#136f2d;
 }
 
-@media (max-width:560px){
-  .ppn-ai-logo{ width:40px; height:40px; padding:7px; }
-  .ppn-copy-icon{ font-size:1rem; padding:7px 9px; }
+/* 🔸 Bloc prompt */
+.ppn-prompt-box{
+  margin-top:18px;
+  background:#fff;
+  border:1px solid rgba(11,15,25,.1);
+  border-radius:12px;
+  padding:14px;
+  text-align:left;
+  box-shadow:0 3px 10px rgba(11,15,25,.05);
+  animation:fadeIn .3s ease;
+}
+.ppn-prompt-box textarea{
+  width:100%;
+  border:1px solid rgba(11,15,25,.15);
+  border-radius:8px;
+  padding:10px;
+  resize:vertical;
+  font-family:monospace;
+  font-size:.85rem;
+  color:#333;
+  background:#f9f9ff;
+  margin-top:6px;
+  margin-bottom:10px;
+}
+.ppn-prompt-box button{
+  background:var(--ppn-primary);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+  font-size:.9rem;
+  font-weight:600;
+}
+.ppn-prompt-box button:hover{
+  background:#4b44e5;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
 }
 </style>
 
@@ -142,21 +186,45 @@ Domaine : ${domain}`;
 
   const copyBtn = document.getElementById("ppnCopyPrompt");
   const toast = document.querySelector(".ppn-ai-toast");
+  const promptBox = document.getElementById("ppnPromptBox");
+  const promptText = document.getElementById("ppnPromptText");
+  const manualCopyBtn = document.getElementById("ppnManualCopy");
 
   async function copyToClipboard(text){
     try{
       await navigator.clipboard.writeText(text);
-      toast.hidden = false;
-      toast.textContent = "✅ Prompt copié — collez-le dans l’IA";
-      setTimeout(()=>toast.hidden=true,2500);
+      if(toast){
+        toast.hidden=false;
+        toast.textContent="✅ Prompt copié — collez-le dans l’IA (⌘/Ctrl+V)";
+        setTimeout(()=>toast.hidden=true,2500);
+      }
+      promptBox.hidden = true;
     }catch(e){
-      alert("Copie automatique impossible. Voici le prompt à copier :\n\n" + text);
+      // Si la copie auto échoue → affichage du bloc
+      promptBox.hidden = false;
+      promptText.value = text;
+      promptText.focus();
+      promptText.select();
     }
   }
 
   copyBtn.addEventListener("click", ()=>{
     const prompt = buildPrompt();
     copyToClipboard(prompt);
+  });
+
+  manualCopyBtn.addEventListener("click", async ()=>{
+    const text = promptText.value;
+    try{
+      await navigator.clipboard.writeText(text);
+      if(toast){
+        toast.hidden=false;
+        toast.textContent="✅ Prompt copié manuellement";
+        setTimeout(()=>toast.hidden=true,2500);
+      }
+    }catch(e){
+      alert("Impossible de copier. Sélectionnez et copiez manuellement (⌘/Ctrl + C).");
+    }
   });
 })();
 </script>

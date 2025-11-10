@@ -1,39 +1,36 @@
-<!-- 🔹 Papernest – Résumé IA compact (fond violet + bouton "copier le prompt") -->
+<!-- 🔹 Papernest – Résumé IA compact avec bouton de copie -->
 <div class="ppn-ai-strip" role="region" aria-label="Résumé d'article via IA">
   <p class="ppn-ai-strip__title">
     <strong>Article trop long&nbsp;?</strong> Demandez un résumé à l’IA&nbsp;:
   </p>
 
   <div class="ppn-ai-strip__logos">
-    <!-- ChatGPT -->
     <a class="ppn-ai-logo" href="https://chat.openai.com/" target="_blank" rel="noopener" title="Ouvrir ChatGPT">
       <img alt="ChatGPT" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/refs/heads/main/chatgpt-6.svg">
     </a>
-
-    <!-- Claude -->
     <a class="ppn-ai-logo" href="https://claude.ai/new" target="_blank" rel="noopener" title="Ouvrir Claude">
       <img alt="Claude" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Claude_AI_symbol.svg.png">
     </a>
-
-    <!-- Mistral -->
     <a class="ppn-ai-logo" href="https://chat.mistral.ai/chat" target="_blank" rel="noopener" title="Ouvrir Mistral">
       <img alt="Mistral" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Mistral_AI_logo_(2025%E2%80%93).svg.png">
     </a>
-
-    <!-- Microsoft Copilot -->
     <a class="ppn-ai-logo" href="https://copilot.microsoft.com/" target="_blank" rel="noopener" title="Ouvrir Copilot">
       <img alt="Copilot" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Microsoft_Copilot_Icon.svg.png">
     </a>
   </div>
 
-  <button id="ppnCopyPrompt" class="ppn-ai-copy-btn" type="button">📋 Copier le prompt</button>
+  <!-- Petit bouton rond de copie -->
+  <button id="ppnCopyPrompt" class="ppn-copy-icon" title="Copier le prompt">
+    📋
+  </button>
+
   <span class="ppn-ai-toast" aria-live="polite" hidden>✅ Prompt copié</span>
 </div>
 
 <style>
 :root{
-  --ppn-primary:#5A52FF;  /* violet Papernest */
-  --ppn-bg:#F3F4FF;       /* fond violet très clair */
+  --ppn-primary:#5A52FF;
+  --ppn-bg:#F3F4FF;
   --ppn-text:#0b0f19;
   --ppn-radius:20px;
   --ppn-shadow:0 8px 24px rgba(11,15,25,.06);
@@ -65,15 +62,14 @@
 .ppn-ai-logo{
   background:#fff;
   border:1px solid rgba(11,15,25,.10);
-  width:44px;
-  height:44px;
+  width:44px;height:44px;
   border-radius:999px;
   padding:8px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   box-shadow:0 2px 8px rgba(11,15,25,.06);
-  transition:transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+  transition:transform .08s ease,box-shadow .12s ease,border-color .12s ease;
 }
 .ppn-ai-logo:hover{
   box-shadow:0 6px 16px rgba(90,82,255,.25);
@@ -82,21 +78,25 @@
 .ppn-ai-logo:active{ transform:translateY(1px); }
 .ppn-ai-logo img{ width:100%; height:100%; object-fit:contain; }
 
-.ppn-ai-copy-btn{
+.ppn-copy-icon{
   margin-top:14px;
+  background:#fff;
+  border:1px solid rgba(11,15,25,.1);
+  border-radius:999px;
+  font-size:1.2rem;
+  cursor:pointer;
+  padding:8px 10px;
+  color:var(--ppn-primary);
+  transition:all .15s ease;
+  box-shadow:0 3px 8px rgba(11,15,25,.05);
+}
+.ppn-copy-icon:hover{
   background:var(--ppn-primary);
   color:#fff;
-  border:none;
-  border-radius:12px;
-  padding:8px 14px;
-  font-size:.9rem;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 6px 16px rgba(90,82,255,.25);
-  transition:background .2s ease, transform .05s ease;
+  border-color:var(--ppn-primary);
+  box-shadow:0 6px 16px rgba(90,82,255,.3);
 }
-.ppn-ai-copy-btn:hover{ background:#4b44e5; }
-.ppn-ai-copy-btn:active{ transform:translateY(1px); }
+.ppn-copy-icon:active{ transform:translateY(1px); }
 
 .ppn-ai-toast{
   display:block;
@@ -107,33 +107,36 @@
 
 @media (max-width:560px){
   .ppn-ai-logo{ width:40px; height:40px; padding:7px; }
-  .ppn-ai-copy-btn{ font-size:.85rem; padding:7px 12px; }
+  .ppn-copy-icon{ font-size:1rem; padding:7px 9px; }
 }
 </style>
 
 <script>
 (function(){
-  // 🔹 Prompt intelligent Papernest avec URL et titre
+  // 🔹 Prompt intelligent Papernest
   function buildPrompt(){
     const url = window.location.href;
     const domain = new URL(url).hostname.replace(/^www\./,'');
-    const pageTitle = (document.title || '').trim();
+    const title = (document.title || '').trim();
 
     return `Tu es un assistant éditorial pour Papernest.
-Analyse l’article à l’URL suivante (${url}) et produis un résumé professionnel et concis à destination du lecteur.
 
-Voici les consignes précises :
-1. Démarre par un TL;DR clair en 1 à 2 phrases.
-2. Résume ensuite les faits clés en 5 à 7 points, avec chiffres, dates et variations importantes (€/%, kWh, etc.).
-3. Termine par une section “Ce que ça change pour vous” avec 2–3 phrases concrètes et utiles.
-4. Si pertinent, cite ou suggère jusqu’à trois articles connexes UNIQUEMENT issus du même domaine (${domain}), sinon indique qu’aucun lien pertinent n’est disponible.
-5. Ajoute un avertissement si certaines informations peuvent évoluer.
-6. Garde Papernest comme source principale dans les formulations.
-7. Fournis à la fin :
-   - un “Titre SEO” (≤60 caractères)
-   - une “Meta description” (≤155 caractères)
-   
-Titre de la page : ${pageTitle}
+Analyse l’article disponible à cette URL : ${url}
+
+👉 Objectif : produire un résumé clair, structuré et utile pour l’internaute.
+
+Exigences :
+1️⃣ Commence par un TL;DR (1–2 phrases) qui résume l’essentiel.
+2️⃣ Détaille ensuite les points clés (5 à 7 bullet points) avec chiffres, variations ou dates importantes.
+3️⃣ Ajoute une section "Ce que ça change pour vous" : 2–3 phrases concrètes et pratiques.
+4️⃣ Si possible, propose jusqu’à 3 articles connexes du même domaine (${domain}), sinon indique qu’aucun lien pertinent n’est trouvé.
+5️⃣ Termine avec :
+   - Un Titre SEO (≤60 caractères)
+   - Une Meta description (≤155 caractères)
+6️⃣ Si les données peuvent évoluer, précise-le.
+7️⃣ Mentionne Papernest comme source principale.
+
+Titre détecté : ${title}
 Domaine : ${domain}`;
   }
 
@@ -143,17 +146,15 @@ Domaine : ${domain}`;
   async function copyToClipboard(text){
     try{
       await navigator.clipboard.writeText(text);
-      if(toast){
-        toast.hidden=false;
-        toast.textContent="✅ Prompt copié — collez-le dans l’IA (⌘/Ctrl+V)";
-        setTimeout(()=>toast.hidden=true,2500);
-      }
+      toast.hidden = false;
+      toast.textContent = "✅ Prompt copié — collez-le dans l’IA (⌘/Ctrl+V)";
+      setTimeout(()=>toast.hidden=true,2500);
     }catch(e){
-      alert("Impossible de copier automatiquement. Voici le prompt à copier manuellement :\n\n"+text);
+      alert("Copie automatique impossible. Voici le prompt à copier :\n\n" + text);
     }
   }
 
-  copyBtn.addEventListener("click",()=>{
+  copyBtn.addEventListener("click", ()=>{
     const prompt = buildPrompt();
     copyToClipboard(prompt);
   });

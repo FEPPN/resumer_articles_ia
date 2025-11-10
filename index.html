@@ -147,7 +147,7 @@ Domaine : ${domain}`;
     try{
       await navigator.clipboard.writeText(text);
       toast.hidden = false;
-      toast.textContent = "✅ Prompt copié — collez-le dans l’IA (⌘/Ctrl+V)";
+      toast.textContent = "✅ Prompt copié — collez-le dans l’IA";
       setTimeout(()=>toast.hidden=true,2500);
     }catch(e){
       alert("Copie automatique impossible. Voici le prompt à copier :\n\n" + text);

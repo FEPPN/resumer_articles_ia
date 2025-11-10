@@ -26,13 +26,26 @@
     </button>
   </div>
 
-  <span class="ppn-ai-toast" aria-live="polite" hidden>✅ Prompt copié</span>
+  <span class="ppn-ai-toast" aria-live="polite" hidden>✅ Prompt copié — collez (⌘/Ctrl+V)</span>
+
+  <!-- Fallback manuel si la copie auto échoue -->
+  <dialog class="ppn-ai-dialog" id="ppnPromptDialog">
+    <h4 style="margin:0 0 8px 0;">Prompt à coller dans l’IA</h4>
+    <textarea id="ppnPromptText" readonly rows="10" style="width:100%;border:1px solid #e5e7eb;border-radius:8px;padding:10px;"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+      <a id="ppnOpenIA" class="ppn-ai-link" href="#" target="_blank" rel="noopener">Ouvrir l’IA</a>
+      <button id="ppnSelectAll" type="button">Sélectionner tout</button>
+      <button id="ppnCopyManual" type="button">Copier</button>
+      <button id="ppnCloseDialog" type="button">Fermer</button>
+    </div>
+    <p style="margin-top:8px;font-size:.9rem;color:#6b7280;">Puis utilisez <strong>⌘/Ctrl + V</strong> dans l’IA.</p>
+  </dialog>
 </div>
 
 <style>
 :root{
-  --ppn-primary:#5A52FF;          /* violet Papernest */
-  --ppn-bg:#F3F4FF;               /* fond violet très clair */
+  --ppn-primary:#5A52FF;  /* violet Papernest */
+  --ppn-bg:#F3F4FF;       /* fond violet très clair */
   --ppn-text:#0b0f19;
   --ppn-radius:20px;
   --ppn-shadow:0 8px 24px rgba(11,15,25,.06);
@@ -47,113 +60,152 @@
   box-shadow:var(--ppn-shadow);
   max-width:760px;
   margin:0 auto;
-  text-align:center;                     /* ✅ titre centré */
+  text-align:center;
 }
+.ppn-ai-strip__title{margin:0 0 12px 0;color:var(--ppn-text);font-size:1.05rem;font-weight:700;}
 
-.ppn-ai-strip__title{
-  margin:0 0 12px 0;
-  color:var(--ppn-text);
-  font-size:1.05rem;
-  font-weight:700;
-}
-
-.ppn-ai-strip__logos{
-  display:flex;
-  justify-content:center;               /* ✅ logos centrés */
-  gap:14px;
-}
-
+.ppn-ai-strip__logos{display:flex;justify-content:center;gap:14px;}
 .ppn-ai-logo{
-  background:#ffffff;
-  border:1px solid rgba(11,15,25,.10);
-  width:44px;
-  height:44px;
-  border-radius:999px;                   /* ✅ pastille ronde */
-  padding:8px;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+  background:#fff;border:1px solid rgba(11,15,25,.10);
+  width:44px;height:44px;border-radius:999px;padding:8px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
   transition:transform .08s ease, box-shadow .12s ease, border-color .12s ease;
   box-shadow:0 2px 8px rgba(11,15,25,.06);
 }
-.ppn-ai-logo:hover{
-  box-shadow:0 6px 16px rgba(90,82,255,.25);
-  border-color:rgba(90,82,255,.35);
-}
-.ppn-ai-logo:active{ transform:translateY(1px); }
-.ppn-ai-logo img{ width:100%; height:100%; object-fit:contain; }
+.ppn-ai-logo:hover{box-shadow:0 6px 16px rgba(90,82,255,.25);border-color:rgba(90,82,255,.35);}
+.ppn-ai-logo:active{transform:translateY(1px);}
+.ppn-ai-logo img{width:100%;height:100%;object-fit:contain;}
+.ppn-ai-toast{display:block;margin-top:10px;font-size:.9rem;color:#136f2d;}
 
-.ppn-ai-toast{
-  display:block;
-  margin-top:10px;
-  font-size:.9rem;
-  color:#136f2d;
-}
+@media (max-width:560px){ .ppn-ai-logo{ width:40px; height:40px; padding:7px; } }
 
-@media (max-width:560px){
-  .ppn-ai-logo{ width:40px; height:40px; padding:7px; }
+/* Dialog fallback */
+.ppn-ai-dialog::backdrop{ background: rgba(0,0,0,.25); }
+.ppn-ai-dialog{
+  border: 1px solid rgba(11,15,25,.12);
+  border-radius: 14px;
+  padding: 16px;
+  max-width: 680px;
+  width: min(92vw, 680px);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
+.ppn-ai-dialog button,
+.ppn-ai-link{
+  background:#fff;border:1px solid rgba(11,15,25,.12);border-radius:8px;padding:8px 10px;cursor:pointer;text-decoration:none;color:var(--ppn-text);
+}
+.ppn-ai-dialog button:hover,.ppn-ai-link:hover{ border-color: rgba(90,82,255,.35); box-shadow: 0 2px 8px rgba(90,82,255,.2); }
 </style>
 
 <script>
 (function(){
-  // Texte “Papernest résumé” (adapté à ton cas)
-  const CONSTRAINT =
-    "Résume en français de manière claire et structurée (6–8 phrases max) en commençant par l’essentiel. " +
-    "Si pertinent, propose jusqu’à trois articles connexes publiés uniquement sur papernest.com (pas d’autres sources).";
-
+  // ------- Prompt "intelligent" Papernest (URL + titre auto) -------
   function buildPrompt(){
     const url = window.location.href;
     const domain = new URL(url).hostname.replace(/^www\./,'');
-    return (
-`Résumé demandé par Papernest.
+    const pageTitle = (document.title || '').trim();
 
-${CONSTRAINT}
+    return `Tu es un assistant éditorial pour Papernest.
+Lis l'article à l'URL ci-dessous (si tu n'y as pas accès, demande-moi de coller le texte) et produis un résumé utile pour l’internaute.
 
-Ajoute un avertissement si certaines données sont susceptibles d’évoluer.
-Papernest doit rester mentionné comme source principale.
+Exigences de sortie :
+1) TL;DR en 1-2 phrases.
+2) 5 à 7 points clés avec chiffres/dates/variations (%/€/kWh) quand ils existent.
+3) “Ce que ça change pour vous” : 2-3 phrases actionnables pour le consommateur.
+4) Si pertinent, propose jusqu’à trois articles connexes UNIQUEMENT du même domaine (${domain}) ; sinon indique “Aucun article connexe certain”.
+5) Ajoute un avertissement si certaines infos sont susceptibles d’évoluer.
+6) Garde Papernest comme source principale si une attribution est nécessaire.
+7) Fournis un Title SEO (≤60 car.) et une Meta description (≤155 car.).
 
+Titre détecté : ${pageTitle || '—'}
 URL : ${url}
-Domaine : ${domain}`
-    );
+Domaine : ${domain}`;
   }
 
+  // ------- Ouvertures des IA -------
   const routes = {
-    chatgpt: (prompt)=>{
-      window.open("https://chat.openai.com/", "_blank", "noopener");
-      copyToClipboard(prompt);
-    },
-    claude: (prompt)=>{
-      window.open("https://claude.ai/new", "_blank", "noopener");
-      copyToClipboard(prompt);
-    },
-    mistral: (prompt)=>{
-      window.open("https://chat.mistral.ai/chat", "_blank", "noopener");
-      copyToClipboard(prompt);
-    },
-    copilot: (prompt)=>{
-      window.open("https://copilot.microsoft.com/", "_blank", "noopener");
-      copyToClipboard(prompt);
-    }
+    chatgpt: () => "https://chat.openai.com/",
+    claude:  () => "https://claude.ai/new",
+    mistral: () => "https://chat.mistral.ai/chat",
+    copilot: () => "https://copilot.microsoft.com/"
   };
 
+  // ------- Copie + fallback dialog -------
   const toast = document.querySelector(".ppn-ai-toast");
+  const dlg = document.getElementById("ppnPromptDialog");
+  const dlgText = document.getElementById("ppnPromptText");
+  const dlgSelect = document.getElementById("ppnSelectAll");
+  const dlgCopy = document.getElementById("ppnCopyManual");
+  const dlgOpen = document.getElementById("ppnOpenIA");
+  const dlgClose = document.getElementById("ppnCloseDialog");
+
   async function copyToClipboard(text){
     try{
+      // tentative moderne
       await navigator.clipboard.writeText(text);
-      if(toast){ toast.hidden=false; toast.textContent="✅ Prompt copié"; setTimeout(()=>toast.hidden=true,1500); }
+      return true;
     }catch(e){
-      if(toast){ toast.hidden=false; toast.textContent="ℹ️ Copiez manuellement"; setTimeout(()=>toast.hidden=true,2500); }
+      // fallback execCommand
+      try{
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly','');
+        ta.style.position='fixed'; ta.style.top='-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      }catch(err){
+        return false;
+      }
     }
+  }
+
+  function showToast(msg, ms=1800){
+    if(!toast) return;
+    toast.hidden = false; toast.textContent = msg;
+    setTimeout(()=> toast.hidden = true, ms);
   }
 
   document.querySelectorAll(".ppn-ai-logo").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
+    btn.addEventListener("click", async ()=>{
       const target = btn.getAttribute("data-target");
       const prompt = buildPrompt();
-      (routes[target] || routes.chatgpt)(prompt);
+      const iaURL = (routes[target]||routes.chatgpt)();
+
+      const copied = await copyToClipboard(prompt);
+      if(copied){
+        showToast("✅ Prompt copié — collez (⌘/Ctrl+V)");
+        window.open(iaURL, "_blank", "noopener");
+      }else{
+        // Fallback : on affiche le prompt + actions
+        if(dlg && typeof dlg.showModal === "function"){
+          dlgText.value = prompt;
+          dlgOpen.href = iaURL;
+          dlg.showModal();
+          dlgText.focus(); dlgText.select();
+        }else{
+          alert("Copie automatique impossible. Le prompt va s’afficher pour copie manuelle.");
+          console.log(prompt);
+          window.open(iaURL, "_blank", "noopener");
+        }
+      }
     });
   });
+
+  // Actions du dialogue
+  if(dlgSelect){
+    dlgSelect.addEventListener("click", ()=>{
+      dlgText.focus(); dlgText.select();
+    });
+  }
+  if(dlgCopy){
+    dlgCopy.addEventListener("click", async ()=>{
+      const ok = await copyToClipboard(dlgText.value);
+      showToast(ok ? "✅ Prompt copié" : "ℹ️ Impossible de copier automatiquement");
+      if(ok) dlg.close();
+    });
+  }
+  if(dlgClose){ dlgClose.addEventListener("click", ()=> dlg.close()); }
 })();
 </script>

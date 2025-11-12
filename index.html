@@ -1,36 +1,39 @@
-<!-- 🔹 Papernest – Résumé IA compact avec encart de prompt -->
+<!-- 🔹 Papernest – Résumé IA compact (clic logo = copie du prompt) -->
 <div class="ppn-ai-strip" role="region" aria-label="Résumé d'article via IA">
   <p class="ppn-ai-strip__title">
     <strong>Article trop long&nbsp;?</strong> Demandez un résumé à l’IA&nbsp;:
   </p>
 
   <div class="ppn-ai-strip__logos">
-    <a class="ppn-ai-logo" href="https://chat.openai.com/" target="_blank" rel="noopener" title="Ouvrir ChatGPT">
+    <!-- ChatGPT -->
+    <button class="ppn-ai-logo" data-ai="ChatGPT" title="Copier le prompt pour ChatGPT">
       <img alt="ChatGPT" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/refs/heads/main/chatgpt-6.svg">
-    </a>
-    <a class="ppn-ai-logo" href="https://claude.ai/new" target="_blank" rel="noopener" title="Ouvrir Claude">
+    </button>
+
+    <!-- Claude -->
+    <button class="ppn-ai-logo" data-ai="Claude" title="Copier le prompt pour Claude">
       <img alt="Claude" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Claude_AI_symbol.svg.png">
-    </a>
-    <a class="ppn-ai-logo" href="https://chat.mistral.ai/chat" target="_blank" rel="noopener" title="Ouvrir Mistral">
+    </button>
+
+    <!-- Mistral -->
+    <button class="ppn-ai-logo" data-ai="Mistral" title="Copier le prompt pour Mistral">
       <img alt="Mistral" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Mistral_AI_logo_(2025%E2%80%93).svg.png">
-    </a>
-    <a class="ppn-ai-logo" href="https://copilot.microsoft.com/" target="_blank" rel="noopener" title="Ouvrir Copilot">
+    </button>
+
+    <!-- Copilot -->
+    <button class="ppn-ai-logo" data-ai="Copilot" title="Copier le prompt pour Copilot">
       <img alt="Copilot" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Microsoft_Copilot_Icon.svg.png">
-    </a>
+    </button>
   </div>
 
-  <button id="ppnCopyPrompt" class="ppn-copy-icon" title="Copier le prompt">
-    📋 Copier le prompt
-  </button>
+  <!-- Message discret -->
+  <div class="ppn-ai-hint" aria-live="polite">Clique sur une IA pour copier le prompt.</div>
 
-  <span class="ppn-ai-toast" aria-live="polite" hidden>✅ Prompt copié</span>
-
-  <!-- 🔸 Encart de fallback élégant -->
-  <div id="ppnPromptBox" class="ppn-prompt-box" hidden>
-    <p><strong>Copie manuelle :</strong> Voici votre prompt généré 👇</p>
-    <textarea id="ppnPromptText" readonly rows="9"></textarea>
-    <button id="ppnManualCopy" type="button">📋 Copier manuellement</button>
-  </div>
+  <!-- Dépliable ultra-simple si la copie auto échoue -->
+  <details id="ppnFallback" class="ppn-fallback" hidden>
+    <summary>Afficher le prompt</summary>
+    <textarea id="ppnPromptText" readonly rows="8"></textarea>
+  </details>
 </div>
 
 <style>
@@ -53,111 +56,34 @@
   margin:0 auto;
   text-align:center;
 }
-.ppn-ai-strip__title{
-  margin:0 0 12px 0;
-  color:var(--ppn-text);
-  font-size:1.05rem;
-  font-weight:700;
-}
-.ppn-ai-strip__logos{
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  flex-wrap:wrap;
-}
+.ppn-ai-strip__title{margin:0 0 12px;color:var(--ppn-text);font-size:1.05rem;font-weight:700;}
+.ppn-ai-strip__logos{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
 .ppn-ai-logo{
-  background:#fff;
-  border:1px solid rgba(11,15,25,.10);
-  width:44px;height:44px;
-  border-radius:999px;
-  padding:8px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+  background:#fff;border:1px solid rgba(11,15,25,.1);
+  width:44px;height:44px;border-radius:999px;padding:8px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:transform .08s ease, box-shadow .12s ease, border-color .12s ease;
   box-shadow:0 2px 8px rgba(11,15,25,.06);
-  transition:transform .08s ease,box-shadow .12s ease,border-color .12s ease;
 }
-.ppn-ai-logo:hover{
-  box-shadow:0 6px 16px rgba(90,82,255,.25);
-  border-color:rgba(90,82,255,.35);
-}
-.ppn-ai-logo:active{ transform:translateY(1px); }
-.ppn-ai-logo img{ width:100%; height:100%; object-fit:contain; }
+.ppn-ai-logo:hover{box-shadow:0 6px 16px rgba(90,82,255,.25);border-color:rgba(90,82,255,.35);}
+.ppn-ai-logo:active{transform:translateY(1px);}
+.ppn-ai-logo img{width:100%;height:100%;object-fit:contain}
 
-.ppn-copy-icon{
-  margin-top:14px;
-  background:#fff;
-  border:1px solid rgba(11,15,25,.1);
-  border-radius:999px;
-  font-size:.95rem;
-  font-weight:600;
-  cursor:pointer;
-  padding:8px 16px;
-  color:var(--ppn-primary);
-  transition:all .15s ease;
-  box-shadow:0 3px 8px rgba(11,15,25,.05);
-}
-.ppn-copy-icon:hover{
-  background:var(--ppn-primary);
-  color:#fff;
-  border-color:var(--ppn-primary);
-  box-shadow:0 6px 16px rgba(90,82,255,.3);
-}
-.ppn-copy-icon:active{ transform:translateY(1px); }
+.ppn-ai-hint{margin-top:10px;font-size:.92rem;color:#475569}
 
-.ppn-ai-toast{
-  display:block;
-  margin-top:8px;
-  font-size:.9rem;
-  color:#136f2d;
+.ppn-fallback{margin-top:10px;text-align:left}
+.ppn-fallback summary{cursor:pointer;color:var(--ppn-primary);font-weight:600}
+.ppn-fallback textarea{
+  width:100%;margin-top:8px;background:#fff;border:1px solid rgba(11,15,25,.15);
+  border-radius:10px;padding:10px;font-family:monospace;font-size:.85rem
 }
 
-/* 🔸 Bloc prompt */
-.ppn-prompt-box{
-  margin-top:18px;
-  background:#fff;
-  border:1px solid rgba(11,15,25,.1);
-  border-radius:12px;
-  padding:14px;
-  text-align:left;
-  box-shadow:0 3px 10px rgba(11,15,25,.05);
-  animation:fadeIn .3s ease;
-}
-.ppn-prompt-box textarea{
-  width:100%;
-  border:1px solid rgba(11,15,25,.15);
-  border-radius:8px;
-  padding:10px;
-  resize:vertical;
-  font-family:monospace;
-  font-size:.85rem;
-  color:#333;
-  background:#f9f9ff;
-  margin-top:6px;
-  margin-bottom:10px;
-}
-.ppn-prompt-box button{
-  background:var(--ppn-primary);
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:8px 12px;
-  cursor:pointer;
-  font-size:.9rem;
-  font-weight:600;
-}
-.ppn-prompt-box button:hover{
-  background:#4b44e5;
-}
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(5px);}
-  to{opacity:1;transform:translateY(0);}
-}
+@media (max-width:560px){ .ppn-ai-logo{width:40px;height:40px;padding:7px} }
 </style>
 
 <script>
 (function(){
-  // 🔹 Prompt intelligent Papernest
+  // Prompt intelligent (URL + titre + consignes)
   function buildPrompt(){
     const url = window.location.href;
     const domain = new URL(url).hostname.replace(/^www\./,'');
@@ -165,66 +91,51 @@
 
     return `Tu es un assistant éditorial pour Papernest.
 
-Analyse l’article disponible à cette URL : ${url}
+Analyse l’article à cette URL : ${url}
 
-👉 Objectif : produire un résumé clair, structuré et utile pour l’internaute.
+Objectif : produire un résumé clair, structuré et utile.
 
 Exigences :
-1️⃣ Commence par un TL;DR (1–2 phrases) qui résume l’essentiel.
-2️⃣ Détaille ensuite les points clés (5 à 7 bullet points) avec chiffres, variations ou dates importantes.
-3️⃣ Ajoute une section "Ce que ça change pour vous" : 2–3 phrases concrètes et pratiques.
-4️⃣ Si possible, propose jusqu’à 3 articles connexes du même domaine (${domain}), sinon indique qu’aucun lien pertinent n’est trouvé.
-5️⃣ Termine avec :
-   - Un Titre SEO (≤60 caractères)
-   - Une Meta description (≤155 caractères)
-6️⃣ Si les données peuvent évoluer, précise-le.
-7️⃣ Mentionne Papernest comme source principale.
+1) TL;DR en 1–2 phrases.
+2) 5–7 points clés avec chiffres/dates/variations (€/%, kWh…).
+3) Section “Ce que ça change pour vous” (2–3 phrases actionnables).
+4) Si possible, jusqu’à 3 articles connexes du même domaine (${domain}); sinon indique qu’aucun lien pertinent n’est disponible.
+5) Ajoute un avertissement si certaines infos peuvent évoluer.
+6) Fournis un Titre SEO (≤60 car.) et une Meta description (≤155 car.).
+7) Mentionne Papernest comme source principale.
 
 Titre détecté : ${title}
 Domaine : ${domain}`;
   }
 
-  const copyBtn = document.getElementById("ppnCopyPrompt");
-  const toast = document.querySelector(".ppn-ai-toast");
-  const promptBox = document.getElementById("ppnPromptBox");
+  const logos = document.querySelectorAll(".ppn-ai-logo");
+  const hint  = document.querySelector(".ppn-ai-hint");
+  const fallback = document.getElementById("ppnFallback");
   const promptText = document.getElementById("ppnPromptText");
-  const manualCopyBtn = document.getElementById("ppnManualCopy");
 
-  async function copyToClipboard(text){
+  async function tryCopy(text){
     try{
       await navigator.clipboard.writeText(text);
-      if(toast){
-        toast.hidden=false;
-        toast.textContent="✅ Prompt copié — collez-le dans l’IA (⌘/Ctrl+V)";
-        setTimeout(()=>toast.hidden=true,2500);
-      }
-      promptBox.hidden = true;
-    }catch(e){
-      // Si la copie auto échoue → affichage du bloc
-      promptBox.hidden = false;
-      promptText.value = text;
-      promptText.focus();
-      promptText.select();
-    }
+      return true;
+    }catch{ return false; }
   }
 
-  copyBtn.addEventListener("click", ()=>{
-    const prompt = buildPrompt();
-    copyToClipboard(prompt);
-  });
+  logos.forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const ai = btn.getAttribute("data-ai") || "l’IA";
+      const prompt = buildPrompt();
+      const ok = await tryCopy(prompt);
 
-  manualCopyBtn.addEventListener("click", async ()=>{
-    const text = promptText.value;
-    try{
-      await navigator.clipboard.writeText(text);
-      if(toast){
-        toast.hidden=false;
-        toast.textContent="✅ Prompt copié manuellement";
-        setTimeout(()=>toast.hidden=true,2500);
+      if(ok){
+        hint.textContent = `✅ Prompt copié — plus qu'à le coller ou vous le souhaitez !`;
+      }else{
+        // Copie bloquée : on propose le prompt à copier manuellement, proprement
+        hint.textContent = `ℹ️ Copie auto bloquée — ouvrez ${ai}, puis copiez/collez le prompt ci-dessous.`;
+        fallback.hidden = false;
+        promptText.value = prompt;
+        promptText.focus(); promptText.select();
       }
-    }catch(e){
-      alert("Impossible de copier. Sélectionnez et copiez manuellement (⌘/Ctrl + C).");
-    }
+    });
   });
 })();
 </script>

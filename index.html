@@ -1,130 +1,18 @@
-<!-- 🔹 Papernest – Résumé IA compact (clic logo = copie + redirection) -->
-<div class="ppn-ai-strip" role="region" aria-label="Résumé d'article via IA">
-  <p class="ppn-ai-strip__title">
-    <strong>Article trop long&nbsp;?</strong> Demandez un résumé à l’IA&nbsp;:
-  </p>
-
-  <div class="ppn-ai-strip__logos">
-    <button class="ppn-ai-logo" data-ai="ChatGPT" data-url="https://chat.openai.com/" title="Copier le prompt et ouvrir ChatGPT">
-      <img alt="ChatGPT" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/refs/heads/main/chatgpt-6.svg">
-    </button>
-    <button class="ppn-ai-logo" data-ai="Claude" data-url="https://claude.ai/new" title="Copier le prompt et ouvrir Claude">
-      <img alt="Claude" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Claude_AI_symbol.svg.png">
-    </button>
-    <button class="ppn-ai-logo" data-ai="Mistral" data-url="https://chat.mistral.ai/chat" title="Copier le prompt et ouvrir Mistral">
-      <img alt="Mistral" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Mistral_AI_logo_(2025%E2%80%93).svg.png">
-    </button>
-    <button class="ppn-ai-logo" data-ai="Copilot" data-url="https://copilot.microsoft.com/" title="Copier le prompt et ouvrir Copilot">
-      <img alt="Copilot" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Microsoft_Copilot_Icon.svg.png">
-    </button>
-  </div>
-
-  <div class="ppn-ai-hint" aria-live="polite">Cliquez sur une IA pour copier le prompt et l’ouvrir.</div>
-
-  <details id="ppnFallback" class="ppn-fallback" hidden>
-    <summary>Afficher le prompt</summary>
-    <textarea id="ppnPromptText" readonly rows="8"></textarea>
-  </details>
-</div>
-
-<style>
-:root{
-  --ppn-primary:#5A52FF;
-  --ppn-bg:#F3F4FF;
-  --ppn-text:#0b0f19;
-  --ppn-radius:20px;
-  --ppn-shadow:0 8px 24px rgba(11,15,25,.06);
-}
-.ppn-ai-strip{
-  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:var(--ppn-bg);
-  border:1px solid rgba(90,82,255,.18);
-  border-radius:var(--ppn-radius);
-  padding:18px 20px;
-  box-shadow:var(--ppn-shadow);
-  max-width:760px;
-  margin:0 auto;
-  text-align:center;
-}
-.ppn-ai-strip__title{margin:0 0 12px;color:var(--ppn-text);font-size:1.05rem;font-weight:700;}
-.ppn-ai-strip__logos{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
-.ppn-ai-logo{
-  background:#fff;border:1px solid rgba(11,15,25,.1);
-  width:44px;height:44px;border-radius:999px;padding:8px;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;
-  transition:transform .08s ease, box-shadow .12s ease, border-color .12s ease;
-  box-shadow:0 2px 8px rgba(11,15,25,.06);
-}
-.ppn-ai-logo:hover{box-shadow:0 6px 16px rgba(90,82,255,.25);border-color:rgba(90,82,255,.35);}
-.ppn-ai-logo:active{transform:translateY(1px);}
-.ppn-ai-logo img{width:100%;height:100%;object-fit:contain}
-.ppn-ai-hint{margin-top:10px;font-size:.92rem;color:#475569}
-.ppn-fallback{margin-top:10px;text-align:left}
-.ppn-fallback summary{cursor:pointer;color:var(--ppn-primary);font-weight:600}
-.ppn-fallback textarea{
-  width:100%;margin-top:8px;background:#fff;border:1px solid rgba(11,15,25,.15);
-  border-radius:10px;padding:10px;font-family:monospace;font-size:.85rem
-}
-@media (max-width:560px){ .ppn-ai-logo{width:40px;height:40px;padding:7px} }
-</style>
-
+<iframe id="ppn-ai-iframe" src="https://feppn.github.io/resumer_articles_ia/"
+        style="width:100%;max-width:800px;height:240px;border:0;border-radius:24px;overflow:hidden"></iframe>
 <script>
-(function(){
-  // 🔹 Prompt intelligent Papernest (URL + titre)
-  function buildPrompt(){
-    const url = window.location.href;
-    const domain = new URL(url).hostname.replace(/^www\./,'');
-    const title = (document.title || '').trim();
-
-    return `Tu es un assistant éditorial pour Papernest.
-
-Analyse l’article à cette URL : ${url}
-
-Objectif : produire un résumé clair, structuré et utile pour l’internaute.
-
-Exigences :
-1) TL;DR en 1–2 phrases.
-2) 5–7 points clés avec chiffres/dates/variations (€/%, kWh…).
-3) Section “Ce que ça change pour vous” (2–3 phrases concrètes et actionnables).
-4) Si possible, jusqu’à 3 articles connexes du même domaine (${domain}); sinon indique qu’aucun lien pertinent n’est disponible.
-5) Ajoute un avertissement si certaines infos peuvent évoluer.
-6) Fournis un Titre SEO (≤60 car.) et une Meta description (≤155 car.).
-7) Mentionne Papernest comme source principale.
-
-Titre détecté : ${title}
-Domaine : ${domain}`;
-  }
-
-  const logos = document.querySelectorAll(".ppn-ai-logo");
-  const hint  = document.querySelector(".ppn-ai-hint");
-  const fallback = document.getElementById("ppnFallback");
-  const promptText = document.getElementById("ppnPromptText");
-
-  async function tryCopy(text){
-    try{
-      await navigator.clipboard.writeText(text);
-      return true;
-    }catch{ return false; }
-  }
-
-  logos.forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      const ai = btn.dataset.ai;
-      const target = btn.dataset.url;
-      const prompt = buildPrompt();
-
-      const copied = await tryCopy(prompt);
-      if(copied){
-        hint.textContent = `✅ Prompt copié — ouvrez ${ai} et collez (⌘/Ctrl + V)`;
-      }else{
-        hint.textContent = `ℹ️ Copie auto bloquée — copiez manuellement le prompt ci-dessous avant d’ouvrir ${ai}`;
-        fallback.hidden = false;
-        promptText.value = prompt;
-      }
-
-      // 🚀 ouvre l’IA dans un nouvel onglet
-      window.open(target, "_blank", "noopener");
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  const f = document.getElementById('ppn-ai-iframe');
+  if(!f) return;
+  try{
+    const u = new URL(f.src, window.location.origin);
+    if(!u.searchParams.get('parent')){
+      u.searchParams.set('parent', window.location.href);
+      f.src = u.toString();
+    }
+  }catch(e){}
+  f.addEventListener('load', () => {
+    try{ f.contentWindow.postMessage({ type:'PAPERNEST_PARENT_URL', url: window.location.href }, '*'); }catch(e){}
   });
-})();
+});
 </script>

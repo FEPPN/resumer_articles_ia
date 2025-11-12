@@ -1,35 +1,26 @@
-<!-- 🔹 Papernest – Résumé IA compact (clic logo = copie du prompt) -->
+<!-- 🔹 Papernest – Résumé IA compact (clic logo = copie + redirection) -->
 <div class="ppn-ai-strip" role="region" aria-label="Résumé d'article via IA">
   <p class="ppn-ai-strip__title">
     <strong>Article trop long&nbsp;?</strong> Demandez un résumé à l’IA&nbsp;:
   </p>
 
   <div class="ppn-ai-strip__logos">
-    <!-- ChatGPT -->
-    <button class="ppn-ai-logo" data-ai="ChatGPT" title="Copier le prompt pour ChatGPT">
+    <button class="ppn-ai-logo" data-ai="ChatGPT" data-url="https://chat.openai.com/" title="Copier le prompt et ouvrir ChatGPT">
       <img alt="ChatGPT" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/refs/heads/main/chatgpt-6.svg">
     </button>
-
-    <!-- Claude -->
-    <button class="ppn-ai-logo" data-ai="Claude" title="Copier le prompt pour Claude">
+    <button class="ppn-ai-logo" data-ai="Claude" data-url="https://claude.ai/new" title="Copier le prompt et ouvrir Claude">
       <img alt="Claude" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Claude_AI_symbol.svg.png">
     </button>
-
-    <!-- Mistral -->
-    <button class="ppn-ai-logo" data-ai="Mistral" title="Copier le prompt pour Mistral">
+    <button class="ppn-ai-logo" data-ai="Mistral" data-url="https://chat.mistral.ai/chat" title="Copier le prompt et ouvrir Mistral">
       <img alt="Mistral" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Mistral_AI_logo_(2025%E2%80%93).svg.png">
     </button>
-
-    <!-- Copilot -->
-    <button class="ppn-ai-logo" data-ai="Copilot" title="Copier le prompt pour Copilot">
+    <button class="ppn-ai-logo" data-ai="Copilot" data-url="https://copilot.microsoft.com/" title="Copier le prompt et ouvrir Copilot">
       <img alt="Copilot" src="https://raw.githubusercontent.com/FEPPN/resumer_articles_ia/1b694246d10d428d5464dacf3cbf866844d95861/Microsoft_Copilot_Icon.svg.png">
     </button>
   </div>
 
-  <!-- Message discret -->
-  <div class="ppn-ai-hint" aria-live="polite">Clique sur une IA pour copier le prompt.</div>
+  <div class="ppn-ai-hint" aria-live="polite">Cliquez sur une IA pour copier le prompt et l’ouvrir.</div>
 
-  <!-- Dépliable ultra-simple si la copie auto échoue -->
   <details id="ppnFallback" class="ppn-fallback" hidden>
     <summary>Afficher le prompt</summary>
     <textarea id="ppnPromptText" readonly rows="8"></textarea>
@@ -44,7 +35,6 @@
   --ppn-radius:20px;
   --ppn-shadow:0 8px 24px rgba(11,15,25,.06);
 }
-
 .ppn-ai-strip{
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
   background:var(--ppn-bg);
@@ -68,22 +58,19 @@
 .ppn-ai-logo:hover{box-shadow:0 6px 16px rgba(90,82,255,.25);border-color:rgba(90,82,255,.35);}
 .ppn-ai-logo:active{transform:translateY(1px);}
 .ppn-ai-logo img{width:100%;height:100%;object-fit:contain}
-
 .ppn-ai-hint{margin-top:10px;font-size:.92rem;color:#475569}
-
 .ppn-fallback{margin-top:10px;text-align:left}
 .ppn-fallback summary{cursor:pointer;color:var(--ppn-primary);font-weight:600}
 .ppn-fallback textarea{
   width:100%;margin-top:8px;background:#fff;border:1px solid rgba(11,15,25,.15);
   border-radius:10px;padding:10px;font-family:monospace;font-size:.85rem
 }
-
 @media (max-width:560px){ .ppn-ai-logo{width:40px;height:40px;padding:7px} }
 </style>
 
 <script>
 (function(){
-  // Prompt intelligent (URL + titre + consignes)
+  // 🔹 Prompt intelligent Papernest (URL + titre)
   function buildPrompt(){
     const url = window.location.href;
     const domain = new URL(url).hostname.replace(/^www\./,'');
@@ -93,12 +80,12 @@
 
 Analyse l’article à cette URL : ${url}
 
-Objectif : produire un résumé clair, structuré et utile.
+Objectif : produire un résumé clair, structuré et utile pour l’internaute.
 
 Exigences :
 1) TL;DR en 1–2 phrases.
 2) 5–7 points clés avec chiffres/dates/variations (€/%, kWh…).
-3) Section “Ce que ça change pour vous” (2–3 phrases actionnables).
+3) Section “Ce que ça change pour vous” (2–3 phrases concrètes et actionnables).
 4) Si possible, jusqu’à 3 articles connexes du même domaine (${domain}); sinon indique qu’aucun lien pertinent n’est disponible.
 5) Ajoute un avertissement si certaines infos peuvent évoluer.
 6) Fournis un Titre SEO (≤60 car.) et une Meta description (≤155 car.).
@@ -122,19 +109,21 @@ Domaine : ${domain}`;
 
   logos.forEach(btn=>{
     btn.addEventListener("click", async ()=>{
-      const ai = btn.getAttribute("data-ai") || "l’IA";
+      const ai = btn.dataset.ai;
+      const target = btn.dataset.url;
       const prompt = buildPrompt();
-      const ok = await tryCopy(prompt);
 
-      if(ok){
-        hint.textContent = `✅ Prompt copié — plus qu'à le coller ou vous le souhaitez !`;
+      const copied = await tryCopy(prompt);
+      if(copied){
+        hint.textContent = `✅ Prompt copié — ouvrez ${ai} et collez (⌘/Ctrl + V)`;
       }else{
-        // Copie bloquée : on propose le prompt à copier manuellement, proprement
-        hint.textContent = `ℹ️ Copie auto bloquée — ouvrez ${ai}, puis copiez/collez le prompt ci-dessous.`;
+        hint.textContent = `ℹ️ Copie auto bloquée — copiez manuellement le prompt ci-dessous avant d’ouvrir ${ai}`;
         fallback.hidden = false;
         promptText.value = prompt;
-        promptText.focus(); promptText.select();
       }
+
+      // 🚀 ouvre l’IA dans un nouvel onglet
+      window.open(target, "_blank", "noopener");
     });
   });
 })();

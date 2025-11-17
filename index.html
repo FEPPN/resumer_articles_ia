@@ -23,7 +23,7 @@
     </button>
   </div>
 
-  <div class="ppn-ai-hint" aria-live="polite">Cliquez sur un logo : le prompt est prérempli dans l’IA.</div>
+  <div class="ppn-ai-hint" aria-live="polite">✅ Cliquez sur un logo : le prompt est prérempli dans l’IA </div>
 
   <!-- Fallback si besoin -->
   <details id="ppnFallback" class="ppn-fallback" hidden>
@@ -115,7 +115,7 @@ ${url}`;
 
       // On ouvre l'IA avec le prompt déjà dans l'URL
       window.open(url, "_blank", "noopener");
-      hint.textContent = "✅ Prompt prérempli — vous pouvez envoyer la requête.";
+      hint.textContent = "✅ Prompt prérempli ";
     });
   });
 })();

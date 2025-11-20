@@ -57,54 +57,28 @@
     }
   });
 
-  function getEffectiveURL(){
-    const candidates = [];
-
-    function addCandidate(raw){
-      if(!raw) return;
-      try{
-        const u = new URL(raw);
-        candidates.push(u);
-      }catch(e){
-        // URL invalide, on ignore
-      }
+    function getEffectiveURL(){
+    // 1) Priorité absolue : l'URL de la page qui charge l'iframe
+    if (document.referrer) {
+      return document.referrer;
     }
 
-    // 1) paramètre ?parent= / ?ref= / ?source=
+    // 2) Si un parent nous a été envoyé explicitement (WordPress Papernest)
+    if (PARENT_URL_FROM_MESSAGE) {
+      return PARENT_URL_FROM_MESSAGE;
+    }
+
+    // 3) Éventuel paramètre dans l'URL de l'iframe (?parent=, ?ref=, etc.)
     try{
       const sp = new URLSearchParams(window.location.search);
-      addCandidate(sp.get('parent') || sp.get('ref') || sp.get('source'));
+      const fromQuery = sp.get('parent') || sp.get('ref') || sp.get('source');
+      if (fromQuery) return fromQuery;
     }catch(e){}
 
-    // 2) URL reçue via postMessage
-    if (PARENT_URL_FROM_MESSAGE) addCandidate(PARENT_URL_FROM_MESSAGE);
-
-    // 3) document.referrer (souvent = URL complète de la page article)
-    if (document.referrer) addCandidate(document.referrer);
-
-    // 4) top.location (si même origine)
-    try{
-      if (window.top && window.top !== window && window.top.location && window.top.location.href){
-        addCandidate(window.top.location.href);
-      }
-    }catch(e){}
-
-    // 5) URL de l’iframe elle-même (fallback)
-    addCandidate(window.location.href);
-
-    if (!candidates.length){
-      return window.location.href;
-    }
-
-    // 🔎 on choisit l’URL avec le pathname le plus long sur le même domaine
-    let best = candidates[0];
-    for (const u of candidates){
-      if (u.hostname === best.hostname && u.pathname.length > best.pathname.length){
-        best = u;
-      }
-    }
-    return best.toString();
+    // 4) Fallback : URL de l'iframe elle-même
+    return window.location.href;
   }
+
 
 
   // --- prompt Papernest UNIFIÉ pour TOUTES les IA ---

@@ -57,27 +57,29 @@
     }
   });
 
-    function getEffectiveURL(){
-    // 1) Priorité absolue : l'URL de la page qui charge l'iframe
-    if (document.referrer) {
-      return document.referrer;
-    }
+  function getEffectiveURL(){
 
-    // 2) Si un parent nous a été envoyé explicitement (WordPress Papernest)
-    if (PARENT_URL_FROM_MESSAGE) {
-      return PARENT_URL_FROM_MESSAGE;
-    }
+  // 1) d’abord on prend le param parent si présent
+  try{
+    const sp = new URLSearchParams(window.location.search);
+    const fromQuery = sp.get('parent') || sp.get('ref') || sp.get('source');
+    if (fromQuery) return fromQuery;
+  }catch(e){}
 
-    // 3) Éventuel paramètre dans l'URL de l'iframe (?parent=, ?ref=, etc.)
-    try{
-      const sp = new URLSearchParams(window.location.search);
-      const fromQuery = sp.get('parent') || sp.get('ref') || sp.get('source');
-      if (fromQuery) return fromQuery;
-    }catch(e){}
-
-    // 4) Fallback : URL de l'iframe elle-même
-    return window.location.href;
+  // 2) ensuite postMessage si jamais
+  if (PARENT_URL_FROM_MESSAGE) {
+    return PARENT_URL_FROM_MESSAGE;
   }
+
+  // 3) ensuite seulement le referrer
+  if (document.referrer) {
+    return document.referrer;
+  }
+
+  // 4) fallback iframe
+  return window.location.href;
+}
+
 
 
 

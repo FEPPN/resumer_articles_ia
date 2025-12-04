@@ -57,28 +57,28 @@
     }
   });
 
-  function getEffectiveURL(){
-
-  // 1) d’abord on prend le param parent si présent
-  try{
+  function getEffectiveURL() {
+  // 1) D'abord, le paramètre explicite passé à l'iframe
+  try {
     const sp = new URLSearchParams(window.location.search);
-    const fromQuery = sp.get('parent') || sp.get('ref') || sp.get('source');
+    const fromQuery = sp.get("parent") || sp.get("ref") || sp.get("source");
     if (fromQuery) return fromQuery;
-  }catch(e){}
+  } catch (e) {}
 
-  // 2) ensuite postMessage si jamais
+  // 2) Ensuite, l'URL envoyée via postMessage (si utilisée)
   if (PARENT_URL_FROM_MESSAGE) {
     return PARENT_URL_FROM_MESSAGE;
   }
 
-  // 3) ensuite seulement le referrer
+  // 3) Puis le referrer classique (souvent complet sur fournisseur-energie)
   if (document.referrer) {
     return document.referrer;
   }
 
-  // 4) fallback iframe
+  // 4) Fallback : URL de l'iframe elle-même
   return window.location.href;
 }
+
 
 
 
